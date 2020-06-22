@@ -3,6 +3,7 @@ GTSP Solver and ROS Wrapper
 
 ## Install and Setup Julia
 <a href="https://julialang.org/downloads/">Julia Download link</a>
+
 <a href="https://ferrolho.github.io/blog/2019-01-26/how-to-install-julia-on-ubuntu">Julia Setup Instructions</a>
 * Ignore wget command and use downloaded Julia .tar.gz from first link
 
