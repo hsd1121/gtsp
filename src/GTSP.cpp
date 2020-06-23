@@ -56,6 +56,9 @@ void GTSP::computeTour()
 	outfile.close();
 	int solver_output = system("/home/naik/catkin_ws/src/gtsp/src/GLNScmd.jl /tmp/temp.gtsp -mode=fast -output=/tmp/tour.txt");
 
+	if(remove("/tmp/temp.gtsp") != 0)
+    	perror("Error deleting GTSP file");
+
 	std::ifstream infile("/tmp/tour.txt");
 	std::string line;
 	std::string delimiter = ":";
@@ -86,4 +89,6 @@ void GTSP::computeTour()
 		std::getline(s_stream, substr, ',');
 		this->tour_order.push_back(std::stoi(substr));
 	}
+	if( remove( "/tmp/tour.txt" ) != 0 )
+    	perror( "Error deleting tour file" );
 }
