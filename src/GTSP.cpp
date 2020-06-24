@@ -10,6 +10,20 @@ GTSP::~GTSP()
 	
 }
 
+void GTSP::setTSP(bool use_TSP)
+{
+	this->TSP = use_TSP;
+}
+
+void GTSP::setGTSPData(pcl::PointCloud<pcl::PointXYZ> in, int numClusters, std::vector<int> pointClusterMapping)
+{
+	pcl::copyPointCloud(in, this->voxel_path_cloud);
+	this->setTSP(false);
+	this->dimension = this->voxel_path_cloud.size();
+	this->numClusters = numClusters;
+	this->pointClusterMapping = pointClusterMapping;
+}
+
 void GTSP::setPointCloud(pcl::PointCloud<pcl::PointXYZ> in)
 {
 	pcl::copyPointCloud(in, this->voxel_path_cloud);
@@ -25,6 +39,8 @@ void GTSP::computeTour()
 	outfile << "DIMENSION: " << this->dimension << std::endl;
 	if(this->TSP)
 		outfile << "GTSP_SETS: " << this->dimension << std::endl;
+	else
+		outfile << "GTSP_SETS: " << this->numClusters << std::endl;
 	outfile << "EDGE_WEIGHT_TYPE: EXPLICIT" << std::endl;
 	outfile << "EDGE_WEIGHT_FORMAT: FULL_MATRIX" << std::endl;
 	outfile << "EDGE_WEIGHT_SECTION" << std::endl;
@@ -46,19 +62,34 @@ void GTSP::computeTour()
 		outfile << std::endl;
 	}
 	outfile << "GTSP_SET_SECTION:" << std::endl;
-	if(this->TSP) {
+	if(this->TSP) 
+	{
 		for(int i = 0; i < dimension; i++)
 		{
 			outfile << (i+1) << " " << (i+1) << " -1" << std::endl;
+		}
+	}
+	else
+	{
+		for(int i = 1; i <= numClusters; i++)
+		{
+			outfile << i << " ";
+			for(int j = 0; j < pointClusterMapping.size(); j++)
+			{
+				if(pointClusterMapping[j] == i)
+					outfile << (j+1) << " ";
+			}
+			outfile << "-1" << std::endl;
 		}
 	}
 	outfile << "EOF" << std::endl;
 	outfile.close();
 	int solver_output = system("/home/naik/catkin_ws/src/gtsp/src/GLNScmd.jl /tmp/temp.gtsp -mode=fast -output=/tmp/tour.txt");
 
+	/*
 	if(remove("/tmp/temp.gtsp") != 0)
     	perror("Error deleting GTSP file");
-
+	*/
 	std::ifstream infile("/tmp/tour.txt");
 	std::string line;
 	std::string delimiter = ":";
@@ -89,6 +120,8 @@ void GTSP::computeTour()
 		std::getline(s_stream, substr, ',');
 		this->tour_order.push_back(std::stoi(substr));
 	}
+	/*
 	if( remove( "/tmp/tour.txt" ) != 0 )
     	perror( "Error deleting tour file" );
+	*/
 }

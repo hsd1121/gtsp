@@ -8,6 +8,7 @@
 #include <cctype>
 #include <algorithm>
 #include <list>
+#include <vector>
 
 #include <math.h>
 #include <stdio.h>
@@ -27,10 +28,14 @@ private:
 public:
 	GTSP(bool use_TSP);
 	~GTSP();
+	void setGTSPData(pcl::PointCloud<pcl::PointXYZ> in, int numClusters, std::vector<int> pointClusterMapping);
 	void setPointCloud(pcl::PointCloud<pcl::PointXYZ> in);
 	void computeTour();
+	void setTSP(bool use_TSP);
 
 	std::list<int> tour_order;
+	std::vector<int> pointClusterMapping;
+	int numClusters;
 };
 
 #endif

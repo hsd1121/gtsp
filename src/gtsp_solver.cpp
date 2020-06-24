@@ -2,6 +2,7 @@
 #include <GTSP.h>
 #include <sensor_msgs/PointCloud2.h>
 #include <gtsp/Tour.h>
+#include <gtsp/GTSPData.h>
 #include <pcl_conversions/pcl_conversions.h>
 #include <vector>
 
@@ -9,7 +10,7 @@ class GTSPROSWrapper
 {
 private:
 	std::unique_ptr<GTSP> gtsp_;
-	ros::Subscriber voxel_point_cloud_subscriber_;
+	ros::Subscriber voxel_point_cloud_subscriber_, gtsp_data_subscriber_;
 	ros::Publisher tour_publisher_;
 	int publish_count;
 public:
@@ -17,6 +18,7 @@ public:
 	{
 		this->gtsp_ = std::unique_ptr<GTSP>(new GTSP(true));
 		this->voxel_point_cloud_subscriber_ = nh->subscribe("gtsp_point_cloud", 10, &GTSPROSWrapper::callbackPointCloud, this);
+		this->gtsp_data_subscriber_ = nh->subscribe("gtsp_data", 10, &GTSPROSWrapper::callbackGTSPData, this);
         this->tour_publisher_ = nh->advertise<gtsp::Tour>("gtsp_tour_list", 1);
         this->publish_count = 0;
 	}
@@ -28,6 +30,27 @@ public:
 	   	pcl::PointCloud<pcl::PointXYZ>::Ptr temp_cloud(new pcl::PointCloud<pcl::PointXYZ>);
 	    pcl::fromPCLPointCloud2(pcl_pc2, *temp_cloud);
     	this->gtsp_->setPointCloud(*temp_cloud);
+    	this->gtsp_->computeTour();
+
+    	gtsp::Tour msg;
+    	std::vector<int> tour;
+    	for (std::list<int>::const_iterator iterator = this->gtsp_->tour_order.begin(), end = this->gtsp_->tour_order.end(); iterator != end; ++iterator) {
+    		tour.push_back(*iterator);
+		}
+    	msg.tour = tour;
+    	msg.header.seq = publish_count;
+    	msg.header.stamp = ros::Time::now();
+    	this->tour_publisher_.publish(msg);
+    	publish_count++;
+	}
+
+	void callbackGTSPData(const gtsp::GTSPData::ConstPtr& input)
+	{
+		pcl::PCLPointCloud2 pcl_pc2;
+	    pcl_conversions::toPCL(input->points, pcl_pc2);
+	   	pcl::PointCloud<pcl::PointXYZ>::Ptr temp_cloud(new pcl::PointCloud<pcl::PointXYZ>);
+	    pcl::fromPCLPointCloud2(pcl_pc2, *temp_cloud);
+    	this->gtsp_->setGTSPData(*temp_cloud, input->numClusters, input->pointClusterMapping);
     	this->gtsp_->computeTour();
 
     	gtsp::Tour msg;
