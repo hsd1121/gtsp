@@ -19,5 +19,5 @@ julia> import Pkg
 ```
 3. Install GLNS Package for Julia
 ```
-julia> Pkg.add('GLNS')
+julia> Pkg.add("GLNS")
 ```
